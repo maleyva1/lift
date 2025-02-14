@@ -13,4 +13,4 @@ requires "nim >= 2.0.2"
 
 # Testing
 task generate, "Generate":
-    exec "nim c --out:gen src/lift/generator.nim"
+    exec "nim c --out:gen src/lift.nim"
