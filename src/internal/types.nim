@@ -43,7 +43,7 @@ type
         `Name`*: string
         `TargetKind`*: Option[string]
         `Api`*: Option[string]
-        `Parents`*: Option[seq[JsonValueRef[string]]] # No idea what this is
+        `Parents`*: Option[seq[JsonValueRef[string]]] # No idea what this is yet
         `Child`*: Option[JsonValueRef[string]]
         `Shape`*: Option[ShapeType]
         `NullNullTerm`*: Option[bool]
@@ -149,7 +149,7 @@ type
 
 proc marshal*(file: string): Metadata = 
     try:
-        discard Json.loadFile(file, Metadata)
+        return Json.loadFile(file, Metadata)
     except UnexpectedValueError as e:
         raise newException(MarshallingError, &"Got an error in {file}:{e.line}|{e.col}")
     except UnexpectedField as e:

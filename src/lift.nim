@@ -5,27 +5,27 @@ import std/paths
 
 # todo: remove
 import std/strformat
-import std/tables
-import std/sets
 
 import internal/types
+import internal/generate
 
 import json_serialization
 
+iterator jsonOnly(dir: Path): tuple[kind: PathComponent, file: Path] =
+    ## Iterate over all files in `dir` that are JSON.
+    ## 
+    for kind, file in walkDir(dir):
+        let (_, _, ext) = file.splitFile()
+        if kind == pcFile and ext == ".json":
+            yield (kind, file)
+
 proc generate(input, output: Path) =
-    var items = initTable[string, HashSet[JsonValueKind]]()
-    var names = initHashSet[string]()
-    for component, file in walkDir(input):
+    for kind, file in jsonOnly(input):
         let (_, name, _) = file.splitFile()
-        let nameStr = string(name)
-        let apiDir = nameStr.replace(".", "/").Path
+        let apiDir = name.string.replace(".", "/").Path
         let dest = output / apiDir
         # discard existsOrCreateDir(dest)
-        discard marshal(string(file))
-    for name in names:
-        echo name
-    for k,v in items.pairs:
-            echo &"{k} = {v}"
+        genBindings marshal(string(file)), dest, name.string
 
 when isMainModule:
     import argparse
