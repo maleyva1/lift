@@ -1,126 +1,56 @@
-import std/json
-import std/streams
 import std/strutils
 import std/os
-import std/options
 import std/dirs
 import std/paths
 
-type
-    TypeKind = enum
-        Native
-        ApiRef
-        PointerTo
-        LPArray
-    Type = object
-        `Kind`: Option[TypeKind]
-        `Name`: Option[string]
-        `TargetKind`: Option[string]
-        `Api`: Option[string]
-        `Parents`: Option[seq[JsonNode]] # No idea what this is
-        `Child`: Option[JsonNode]
-        `Attrs`: Option[Attributes]
-    ValueTypeKind = enum
-      Int32
-      UInt32
-      UInt64
-      Byte
-      UInt16
-      PropertyKey
-      Single
-      Double
-      Int64
-      String
-    Constant = object
-        `Name`: string
-        `Type`: Type
-        `ValueType`: ValueTypeKind
-        `Value`: JsonNode # Polymorphic type
-        `Attrs`: seq[JsonNode] # Don't know what these are
-    Fields = object
-        `Name`: string
-        `Type`: JsonNode
-    Value = object
-      `Name`: string
-      `Value`: uint
-    Types = object
-        `Name`: string
-        `Architectures`: seq[Architecture]
-        `Platform`: Option[string]
-        `Kind`: string
-        `Guid`: Option[string]
-        `Size`: Option[int]
-        `PackingSize`: Option[int]
-        `Fields`: Option[seq[Fields]]
-        `IntegerBase`: Option[string]
-        `AlsoUsableFor`: Option[string]
-        `NestedType`: JsonNode # Don't know what this is
-        `Interface`: Type
-        `Params`: Parameter
-        `FreeFunc`: Option[string]
-        `Scoped`: bool
-        `Values`: seq[Value] 
-        `Def`: JsonNode # todo: comback
-        `InvalidHandleValue`: Option[int]
-        `Flags`: bool
-        `Comment`: string
-        `Methods`: seq[Function]
-        `ReturnAttrs`: seq[Attributes]
-        `ReturnType`: Type
-    Attributes = enum
-      PreserveSig
-      DoesNotReturn
-      Optional
-      In
-      Out
-      ComOutPtr
-      Const
-      SpecialName
-    Parameter = object
-      `Name`: string 
-      `Type`: Type
-      `Attrs`: seq[JsonNode] # TODO: fix
-    Architecture = enum
-      X86
-      X64
-      Arm64
-    Platform = enum # todo fix
-      `windows6.1`
-    Function = object
-        `Name`: string
-        `SetLastError`: bool
-        `DllImport`: Option[string]
-        `ReturnType`: Type
-        `Architectures`: seq[Architecture]
-        `Platform`: Option[Platform]
-        `Attrs`: seq[Attributes]
-        `Params`: seq[Parameter]
-        `ReturnAttrs`: seq[Attributes]
-    Metadata = object
-        `Constants`: seq[Constant]
-        `Types`: seq[Types]
-        `Functions`: seq[Function]
-        `UnicodeAliases`: seq[string]
+# todo: remove
+import std/strformat
+import std/tables
+import std/sets
 
+import internal/types
+
+import json_serialization
+
+proc generate(input, output: Path) =
+    var items = initTable[string, HashSet[JsonValueKind]]()
+    var names = initHashSet[string]()
+    for component, file in walkDir(input):
+        let (_, name, _) = file.splitFile()
+        let nameStr = string(name)
+        let apiDir = nameStr.replace(".", "/").Path
+        let dest = output / apiDir
+        # discard existsOrCreateDir(dest)
+        discard marshal(string(file))
+    for name in names:
+        echo name
+    for k,v in items.pairs:
+            echo &"{k} = {v}"
 
 when isMainModule:
-    import std/strformat
-    import std/sets
-    import std/tables
-    var c = initTable[string, HashSet[JsonNodeKind]]()
-    for component, file in walkDir("win32json/api"):
-        let (_, name, _) = file.splitFile()
-        let apiDir = name.replace(".", "/").Path
-        let dest = Path("generated") / apiDir
-        # discard existsOrCreateDir(dest)
-        var f = openFileStream(file)
-        defer:
-            # echo "Closing " & file
-            f.close()
-        let jsonNode = parseJson(f.readAll())
-        for item in jsonNode["Constants"]:
-            if item.hasKey("Attrs"):
-                echo item["Attrs"]
-            else:
-              discard
+    import argparse
 
+    var p = newParser:
+        help("CLI tool to generate Nim bindings for WinRT")
+        arg("metadata")
+        arg("output")
+        run:
+            let input = opts.metadata.Path
+            if dirExists(input):
+                generate(input, opts.output.Path)
+            else:
+                stderr.writeLine("The directory " & string(input) & " does not appear to exists")
+                quit(1)
+    if paramCount() > 0:
+        try:
+            p.run(commandLineParams())
+        except UsageError:
+            stderr.writeLine getCurrentExceptionMsg()
+            quit(1)
+        except ShortCircuit as err:
+            if err.flag == "argparse_help":
+                stdout.writeLine(err.help)
+            quit(1)
+    else:
+        stderr.writeLine(p.help())
+        quit(1)
