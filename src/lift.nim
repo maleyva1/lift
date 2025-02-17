@@ -31,7 +31,7 @@ proc generate(input, output: Path) =
         let destinationFile = name.string.split(".")[^1].Path.addFileExt("nim")
         let bindingsFile = dest / destinationFile
         var bindingsFileHandle = open(bindingsFile.string, fmWrite)
-        genBindings(marshal(string(file)), bindingsFileHandle)
+        genBindings(marshal(file.string), bindingsFileHandle)
 
 when isMainModule:
     import argparse

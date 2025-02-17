@@ -115,25 +115,25 @@ type
         `X64`
         Arm64
     Platform = enum
-        `windows5.0`
-        `windows5.1.2600`
-        `windows6.0.6000`
-        `windows6.1`
-        `windows8.0`
-        `windows8.1`
-        `windows10.0.10240`
-        `windows10.0.10586`
-        `windows10.0.14393`
-        `windows10.0.15063`
-        `windows10.0.16299`
-        `windows10.0.17134`
-        `windows10.0.17763`
-        `windows10.0.19041`
-        `windowsServer2000`
-        `windowsServer2003`
-        `windowsServer2008`
-        `windowsServer2012`
-        `windowsServer2016`
+        `windows5.0` = "windows5.0"
+        `windows5.1.2600` = "windows5.1.2600"
+        `windows6.0.6000` = "windows6.0.6000"
+        `windows6.1` = "windows6.1"
+        `windows8.0` = "windows8.0"
+        `windows8.1` = "windows8.1"
+        `windows10.0.10240` = "windows10.0.10240"
+        `windows10.0.10586` = "windows10.0.10586"
+        `windows10.0.14393` = "windows10.0.14393"
+        `windows10.0.15063` = "windows10.0.15063"
+        `windows10.0.16299` = "windows10.0.16299"
+        `windows10.0.17134` = "windows10.0.17134"
+        `windows10.0.17763` = "windows10.0.17763"
+        `windows10.0.19041` = "windows10.0.19041"
+        `windowsServer2000` = "windowsServer2000"
+        `windowsServer2003` = "windowsServer2003"
+        `windowsServer2008` = "windowsServer2008"
+        `windowsServer2012` = "windowsServer2012"
+        `windowsServer2016` = "windowsServer2016"
     Function* = object
         `Attrs`*: seq[Attribute] # Don't know what this is. Assume same as others
         `Name`*: string
@@ -141,7 +141,7 @@ type
         `DllImport`*: Option[string]
         `ReturnType`*: JsonValueRef[string] # Polymorphic apparently
         `Architectures`*: seq[Architecture]
-        `Platform`*: Option[string] # Should be an enum but json-serialization seems to be unable to parse it
+        `Platform`*: Option[Platform]
         `Params`*: seq[Parameter]
         `ReturnAttrs`*: seq[Attribute]
     Metadata* = object
@@ -157,7 +157,7 @@ proc marshal*(file: string): Metadata =
     try:
         return Json.loadFile(file, Metadata)
     except UnexpectedValueError as e:
-        raise newException(MarshallingError, &"Got an error in {file}:{e.line}|{e.col}")
+        raise newException(MarshallingError, &"Unepxected value in {file}:{e.line}|{e.col}")
     except UnexpectedField as e:
         raise newException(MarshallingError, &"Deserialized {e.deserializedType} for {e.encounteredField} in {file}:{e.line}|{e.col}")
     except UnexpectedTokenError as e:

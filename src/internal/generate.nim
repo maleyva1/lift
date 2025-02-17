@@ -109,18 +109,21 @@ proc generateFunctions(info: Metadata; file: FileStream): void =
     ## Generate Nim FFI bindings.
     ## 
     for function in info.Functions:
-        for arch in function.Architectures:
-            file.writeLine &"when defined({arch}):"
-            file.write &"\t"
+        # todo: fix
+        # for arch in function.Architectures:
+        #     file.writeLine &"when defined({arch}):"
+        #     file.write &"\t"
         file.write("proc ")
         file.write(function.Name)
         file.write("(")
         file.write(functionParameters(function.Params))
         file.write("): ")
         file.write(functionReturnType(function.ReturnType))
+        file.write(" ")
         file.write(pragmaBuilder(function.DllImport))
+        file.writeLine("")
 
-const generatedHeader = "# This file was automatically generated. DO NOT MODIFY"
+const generatedHeader = "# This file was automatically generated. DO NOT MODIFY\n"
 
 proc genBindings*(info: Metadata; file: File): void =
     var file = newFileStream(file)
