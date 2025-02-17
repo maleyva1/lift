@@ -20,12 +20,18 @@ iterator jsonOnly(dir: Path): tuple[kind: PathComponent, file: Path] =
             yield (kind, file)
 
 proc generate(input, output: Path) =
+    ## Generate Nim bindings from JSON spec
+    ##
     for kind, file in jsonOnly(input):
         let (_, name, _) = file.splitFile()
         let apiDir = name.string.replace(".", "/").Path
         let dest = output / apiDir
-        # discard existsOrCreateDir(dest)
-        genBindings marshal(string(file)), dest, name.string
+        if not dirExists(dest):
+            createDir(dest)
+        let destinationFile = name.string.split(".")[^1].Path.addFileExt("nim")
+        let bindingsFile = dest / destinationFile
+        var bindingsFileHandle = open(bindingsFile.string, fmWrite)
+        genBindings(marshal(string(file)), bindingsFileHandle)
 
 when isMainModule:
     import argparse

@@ -16,4 +16,5 @@ requires "json_serialization"
 
 # Testing
 task generate, "Generate":
-    exec "nim c --out:gen src/lift.nim"
+    exec "nim c --out:lift src/lift.nim"
+    exec "./lift win32json/api generated"

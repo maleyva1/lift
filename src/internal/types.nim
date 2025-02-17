@@ -66,19 +66,25 @@ type
         `Name`*: string
         `Kind`*: TypeKind
         `Child`*: JsonValueRef[string]
-    InterfaceTargetKind* = enum
-        Com
     InterfaceDefinition* = object
         `Name`*: string
         `Kind`*: TypeKind
         `Parents`*: seq[JsonValueRef[string]]
-        `TargetKind`*: InterfaceTargetKind
+        `TargetKind`*: TypeKindKind
         `Api`*: string
+    TypeKindKind = enum
+        Com
+        ComClassID
+        Enum
+        Struct
+        FunctionPointer
+        Union
+        NativeTypedef
     Type* = object
         `Name`*: string
         `Architectures`*: seq[Architecture]
         `Platform`*: Option[string]
-        `Kind`*: string
+        `Kind`*: TypeKindKind
         `Guid`*: Option[string]
         `SetLastError`*: bool
         `Size`*: int
